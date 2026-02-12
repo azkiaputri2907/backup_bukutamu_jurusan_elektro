@@ -12,6 +12,7 @@ use App\Models\MasterRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use App\Models\MasterKeperluan;
+use App\Models\MasterProdiInstansi;
 
 class DashboardController extends Controller
 {
@@ -48,18 +49,45 @@ public function index()
 
     // --- DATA KUNJUNGAN ---
     public function kunjungan(Request $request)
-    {
-        $query = Kunjungan::with('pengunjung');
-        
-        if ($request->search) {
-            $query->whereHas('pengunjung', function($q) use ($request) {
-                $q->where('nama_lengkap', 'like', '%'.$request->search.'%');
-            })->orWhere('nomor_kunjungan', 'like', '%'.$request->search.'%');
-        }
-
-        $kunjungan = $query->latest()->paginate(10);
-        return view('admin.kunjungan.index', compact('kunjungan'));
+{
+    // Eager load relasi pengunjung
+    $query = Kunjungan::with('pengunjung');
+    
+    // 1. Logic Pencarian (Search)
+    if ($request->search) {
+        $query->whereHas('pengunjung', function($q) use ($request) {
+            $q->where('nama_lengkap', 'like', '%'.$request->search.'%');
+        })->orWhere('nomor_kunjungan', 'like', '%'.$request->search.'%');
     }
+
+    // 2. Logic Filter Prodi (TAMBAHAN PENTING)
+    if ($request->has('prodi') && $request->prodi != '') {
+        // Jika filter "Lainnya" dipilih (opsional, tergantung kebutuhan)
+        if ($request->prodi == 'Lainnya') {
+             $query->whereHas('pengunjung', function($q) {
+                $q->whereNotIn('asal_instansi', [
+                    'D3 Teknik Listrik', 
+                    'D3 Teknik Elektronika', 
+                    'D3 Teknik Informatika', 
+                    'D4 Teknologi Rekayasa Pembangkit Energi', 
+                    'D4 Sistem Informasi Kota Cerdas'
+                ]);
+            });
+        } else {
+            // Filter sesuai nama prodi yang dipilih
+            $query->whereHas('pengunjung', function($q) use ($request) {
+                $q->where('asal_instansi', $request->prodi);
+            });
+        }
+    }
+
+    $kunjungan = $query->latest()->paginate(10);
+    
+    // Penting: Append query string agar saat pindah halaman (pagination), filter tidak hilang
+    $kunjungan->appends($request->all());
+
+    return view('admin.kunjungan.index', compact('kunjungan'));
+}
 
     public function storeKunjungan(Request $request)
     {
@@ -133,12 +161,45 @@ public function index()
     }
 
     // --- DATA SURVEY ---
-    public function survey()
+public function survey(Request $request)
 {
-    // 1. Ambil data survey (Header + Relasi)
-    $surveys = Survey::with(['kunjungan.pengunjung', 'detail'])->latest()->paginate(10);
+    // 1. Ambil daftar prodi untuk dropdown filter
+    $prodis = MasterProdiInstansi::pluck('nama'); // Sesuaikan 'nama_prodi' dengan kolom di tabel Anda
 
-    // 2. HITUNG RATA-RATA DARI TABEL DETAIL_SURVEY (Bukan dari tabel Survey)
+    // 2. Mulai Query dengan Eager Loading
+    $query = Survey::with(['kunjungan.pengunjung', 'detail']);
+
+    // 3. Logika Pencarian Nama Pengunjung
+    if ($request->filled('search')) {
+        $query->whereHas('kunjungan.pengunjung', function($q) use ($request) {
+            $q->where('nama_lengkap', 'like', '%' . $request->search . '%');
+        });
+    }
+
+    // 4. LOGIKA FILTER PRODI (ASAL INSTANSI)
+    if ($request->filled('prodi')) {
+        $query->whereHas('kunjungan.pengunjung', function($q) use ($request) {
+            $q->where('asal_instansi', $request->prodi);
+        });
+    }
+
+    // 5. Logika Filter Rating
+    if ($request->filled('rating')) {
+        if ($request->rating == 'low') {
+            $query->whereHas('detail', function($q) {
+                $q->whereRaw('(p1+p2+p3+p4+p5)/5 < 3');
+            });
+        } elseif ($request->rating == 'high') {
+            $query->whereHas('detail', function($q) {
+                $q->whereRaw('(p1+p2+p3+p4+p5)/5 >= 4');
+            });
+        }
+    }
+
+    // 6. Eksekusi Query
+    $surveys = $query->latest()->paginate(10)->appends($request->all());
+
+    // 7. Hitung Rata-rata Skor (Sidebar)
     $avgScores = [
         DetailSurvey::avg('p1') ?? 0,
         DetailSurvey::avg('p2') ?? 0,
@@ -147,23 +208,20 @@ public function index()
         DetailSurvey::avg('p5') ?? 0,
     ];
 
-    // 3. Ambil nama aspek untuk label (opsional agar dinamis)
-    $aspekLabels = DB::table('master_aspek_survey')->pluck('nama_aspek')->toArray();
-
-    return view('admin.survey.index', compact('surveys', 'avgScores', 'aspekLabels'));
+    return view('admin.survey.index', compact('surveys', 'avgScores', 'prodis'));
 }
 
 // --- DATA PENGUNJUNG ---
-public function pengunjung(Request $request)
-{
-    $query = Pengunjung::query();
-    if ($request->search) {
-        $query->where('nama_lengkap', 'like', '%'.$request->search.'%')
-              ->orWhere('identitas_no', 'like', '%'.$request->search.'%');
-    }
-    $pengunjung = $query->latest()->paginate(10);
-    return view('admin.pengunjung.index', compact('pengunjung'));
-}
+// public function pengunjung(Request $request)
+// {
+//     $query = Pengunjung::query();
+//     if ($request->search) {
+//         $query->where('nama_lengkap', 'like', '%'.$request->search.'%')
+//               ->orWhere('identitas_no', 'like', '%'.$request->search.'%');
+//     }
+//     $pengunjung = $query->latest()->paginate(10);
+//     return view('admin.pengunjung.index', compact('pengunjung'));
+// }
 
 // --- MASTER KEPERLUAN ---
 public function masterKeperluan()
@@ -172,12 +230,12 @@ public function masterKeperluan()
     return view('admin.master.keperluan', compact('keperluan'));
 }
 
-public function storeKeperluan(Request $request)
-{
-    $request->validate(['keterangan' => 'required']);
-    MasterKeperluan::create($request->all());
-    return back()->with('success', 'Keperluan berhasil ditambah.');
-}
+// public function storeKeperluan(Request $request)
+// {
+//     $request->validate(['keterangan' => 'required']);
+//     MasterKeperluan::create($request->all());
+//     return back()->with('success', 'Keperluan berhasil ditambah.');
+// }
 
 // --- LAPORAN ---
 public function laporan()
@@ -204,6 +262,129 @@ public function exportLaporan(Request $request)
 
     // Untuk sementara kita tampilkan data mentah, nanti bisa pakai Excel/PDF
     return $data; 
+}
+
+public function updateSurvey(Request $request, $id)
+    {
+        $request->validate([
+            'saran' => 'nullable|string',
+            'p1' => 'required|integer|min:1|max:5',
+            'p2' => 'required|integer|min:1|max:5',
+            'p3' => 'required|integer|min:1|max:5',
+            'p4' => 'required|integer|min:1|max:5',
+            'p5' => 'required|integer|min:1|max:5',
+        ]);
+
+        // Cari data survey
+        $survey = Survey::findOrFail($id);
+
+        // Update tabel detail_survey (Skor)
+        // Kita gunakan updateOrCreate atau update biasa tergantung relasi
+        if($survey->detail) {
+            $survey->detail()->update([
+                'p1' => $request->p1,
+                'p2' => $request->p2,
+                'p3' => $request->p3,
+                'p4' => $request->p4,
+                'p5' => $request->p5,
+            ]);
+        }
+
+        // Update tabel survey (Saran)
+        // Kolom di database Anda mungkin 'saran' atau 'kritik_saran', sesuaikan di sini:
+        $survey->update([
+            'kritik_saran' => $request->saran // Sesuaikan dengan nama kolom di DB (saran/kritik_saran)
+        ]);
+
+        return redirect()->route('admin.survey')->with('success', 'Data survey berhasil diperbarui!');
+    }
+
+    // 2. Fungsi Destroy (Hapus Data)
+    public function destroySurvey($id)
+    {
+        $survey = Survey::findOrFail($id);
+        
+        // Hapus data (Detail akan terhapus otomatis jika sudah diset CASCADE di migration)
+        // Jika tidak cascade, hapus manual: $survey->detail()->delete();
+        $survey->delete();
+
+        return redirect()->route('admin.survey')->with('success', 'Data survey berhasil dihapus!');
+    }
+
+    public function pengunjung(Request $request)
+{
+    $query = Pengunjung::query();
+
+    // Filter Pencarian (Nama atau No Identitas)
+    if ($request->filled('search')) {
+        $query->where(function($q) use ($request) {
+            $q->where('nama_lengkap', 'like', '%' . $request->search . '%')
+              ->orWhere('identitas_no', 'like', '%' . $request->search . '%');
+        });
+    }
+
+    // Filter Prodi / Instansi
+    if ($request->filled('prodi')) {
+        if ($request->prodi == 'Lainnya') {
+            // Logika jika prodi lainnya (tidak termasuk daftar utama)
+            $prodis = ['D3 Teknik Listrik', 'D3 Teknik Elektronika', 'D3 Teknik Informatika', 'D4 Teknologi Rekayasa Pembangkit Energi', 'D4 Sistem Informasi Kota Cerdas'];
+            $query->whereNotIn('asal_instansi', $prodis);
+        } else {
+            $query->where('asal_instansi', $request->prodi);
+        }
+    }
+
+    $pengunjung = $query->latest('updated_at')->paginate(10)->appends($request->all());
+
+    return view('admin.pengunjung.index', compact('pengunjung'));
+}
+
+public function updatePengunjung(Request $request, $id)
+{
+    $request->validate([
+        'nama_lengkap' => 'required',
+        'asal_instansi' => 'required',
+    ]);
+
+    $p = Pengunjung::findOrFail($id);
+    $p->update($request->only(['nama_lengkap', 'asal_instansi']));
+
+    return redirect()->back()->with('success', 'Data pengunjung berhasil diperbarui');
+}
+
+public function destroyPengunjung($id)
+{
+    $p = Pengunjung::findOrFail($id);
+    $p->delete();
+
+    return redirect()->back()->with('success', 'Data pengunjung berhasil dihapus');
+}
+
+public function storeKeperluan(Request $request)
+{
+    $request->validate(['keterangan' => 'required|string|max:255']);
+    
+    MasterKeperluan::create(['keterangan' => $request->keterangan]);
+
+    return redirect()->back()->with('success', 'Keperluan berhasil ditambahkan!');
+}
+
+public function updateKeperluan(Request $request, $id)
+{
+    $request->validate(['keterangan' => 'required|string|max:255']);
+    
+    $keperluan = MasterKeperluan::findOrFail($id);
+    $keperluan->update(['keterangan' => $request->keterangan]);
+
+    return redirect()->back()->with('success', 'Keperluan berhasil diperbarui!');
+}
+
+public function destroyKeperluan($id)
+{
+    $keperluan = MasterKeperluan::findOrFail($id);
+    $keperluan->delete();
+
+    return redirect()->back()->with('success', 'Keperluan berhasil dihapus!');
 }
 
 }

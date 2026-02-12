@@ -23,18 +23,16 @@ Route::post('/simpan-tamu', [GuestController::class, 'storeKunjungan'])->name('g
 // Fitur Auto-fill (Cek NIM/NIP via Ajax)
 Route::get('/cek-pengunjung', [GuestController::class, 'checkVisitor'])->name('guest.check');
 Route::get('/kunjungan/konfirmasi/{id}', [GuestController::class, 'halamanKonfirmasi'])->name('guest.konfirmasi');
+
 // Alur Survey (Hanya bisa diakses setelah isi buku tamu)
 Route::get('/survey/{id}', [GuestController::class, 'formSurvey'])->name('guest.survey');
 Route::post('/survey-simpan/{id}', [GuestController::class, 'storeSurvey'])->name('guest.survey.store');
 
 
 // --- 2. AUTHENTICATION ---
-// Menonaktifkan fitur Register karena user (Admin/Kajur) dibuat via Seeder
 Auth::routes(['register' => false]);
 
 // --- 3. HALAMAN ADMINISTRATOR & KETUA JURUSAN ---
-// Route yang bisa diakses Admin dan Ketua Jurusan
-
 Route::middleware(['auth'])->group(function () {
     // Dashboard Utama
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
@@ -43,14 +41,37 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/admin/kunjungan', [DashboardController::class, 'kunjungan'])->name('admin.kunjungan');
     Route::post('/admin/kunjungan', [DashboardController::class, 'storeKunjungan'])->name('admin.kunjungan.store');
     Route::put('/admin/kunjungan/{id}', [DashboardController::class, 'updateKunjungan'])->name('admin.kunjungan.update');
-    Route::delete('/admin/kunjungan/{id}', [DashboardController::class, 'destroyKunjungan'])->name('admin.kunjungan.destroy');
+    Route::delete('/admin/kunjungan/{id}', [DashboardController::class, 'destroyKunjungan'])->name('admin.kunjungan.destroy'); // Pastikan route ini ada untuk hapus kunjungan
 
-    Route::get('/admin/survey', [DashboardController::class, 'survey'])->name('admin.survey');
+    // === PERBAIKAN DI SINI (Data Survey) ===
+    // Mengubah name menjadi admin.survey.index agar sesuai dengan form search di View
+    Route::get('/admin/survey', [DashboardController::class, 'survey'])->name('admin.survey'); 
+    // Menambahkan route update
+    Route::put('/admin/survey/{id}', [DashboardController::class, 'updateSurvey'])->name('admin.survey.update');
+    // Menambahkan route delete (destroy)
+    Route::delete('/admin/survey/{id}', [DashboardController::class, 'destroySurvey'])->name('admin.survey.destroy');
+
+    // Rute untuk menampilkan data pengunjung
     Route::get('/admin/pengunjung', [DashboardController::class, 'pengunjung'])->name('admin.pengunjung');
 
-    // Master Data Keperluan
+    // TAMBAHKAN DUA BARIS INI:
+    Route::put('/admin/pengunjung/{id}', [DashboardController::class, 'updatePengunjung'])->name('admin.pengunjung.update');
+    Route::delete('/admin/pengunjung/{id}', [DashboardController::class, 'destroyPengunjung'])->name('admin.pengunjung.destroy');
+
+    // Data Pengunjung (Master)
+    // Route::get('/admin/pengunjung', [DashboardController::class, 'pengunjung'])->name('admin.pengunjung');
+
+    // // Master Data Keperluan
+    // Route::get('/admin/master/keperluan', [DashboardController::class, 'masterKeperluan'])->name('admin.keperluan');
+    // Route::post('/admin/master/keperluan', [DashboardController::class, 'storeKeperluan'])->name('admin.keperluan.store');
+
+    // Menampilkan halaman master keperluan
     Route::get('/admin/master/keperluan', [DashboardController::class, 'masterKeperluan'])->name('admin.keperluan');
+
+    // Tambahkan rute aksi ini:
     Route::post('/admin/master/keperluan', [DashboardController::class, 'storeKeperluan'])->name('admin.keperluan.store');
+    Route::put('/admin/master/keperluan/{id}', [DashboardController::class, 'updateKeperluan'])->name('admin.keperluan.update');
+    Route::delete('/admin/master/keperluan/{id}', [DashboardController::class, 'destroyKeperluan'])->name('admin.keperluan.destroy');
 
     // Laporan
     Route::get('/admin/laporan', [DashboardController::class, 'laporan'])->name('admin.laporan');

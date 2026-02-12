@@ -17,7 +17,15 @@ use Carbon\Carbon;
 class GuestController extends Controller
 {
     public function index() {
-        return view('guest.landing');
+        // MENGAMBIL DATA REAL UNTUK LANDING PAGE
+        $totalPengunjung = Pengunjung::count();
+        $totalKunjungan = Kunjungan::count();
+        
+        // Menghitung rata-rata dari semua kolom P1-P5 di DetailSurvey
+        $avgScore = DetailSurvey::selectRaw('(AVG(p1)+AVG(p2)+AVG(p3)+AVG(p4)+AVG(p5))/5 as rata_rata')->first();
+        $rataRataSurvey = $avgScore->rata_rata ?? 0;
+
+        return view('guest.landing', compact('totalPengunjung', 'totalKunjungan', 'rataRataSurvey'));
     }
 
     public function formKunjungan() {
