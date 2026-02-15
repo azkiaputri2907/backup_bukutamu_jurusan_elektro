@@ -71,11 +71,11 @@
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-bold text-xs uppercase">
-                                {{ substr($row->pengunjung->nama_lengkap, 0, 1) }}
+                                {{ substr($row->nama_lengkap, 0, 1) }}
                             </div>
                             <div>
-                                <span class="block font-bold text-gray-700 text-sm">{{ $row->pengunjung->nama_lengkap }}</span>
-                                <span class="text-[10px] text-gray-400 font-medium">{{ $row->pengunjung->asal_instansi ?? 'Umum' }}</span>
+                                <span class="block font-bold text-gray-700 text-sm">{{ $row->nama_lengkap }}</span>
+                                <span class="text-[10px] text-gray-400 font-medium">{{ $row->asal_instansi ?? 'Umum' }}</span>
                             </div>
                         </div>
                     </td>
@@ -88,7 +88,6 @@
 
                     <td class="px-6 py-4">
                         <div class="flex justify-center items-center gap-2">
-                            {{-- FITUR BARU: Tombol Lihat Detail --}}
                             <button @click="viewModalOpen = true" 
                                     class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-110 transition flex items-center justify-center"
                                     title="Lihat Detail">
@@ -102,10 +101,10 @@
                                 <i class="fas fa-edit text-xs"></i>
                             </button>
 
-                            <form id="delete-form-{{ $row->id }}" action="{{ route('admin.kunjungan.destroy', $row->id) }}" method="POST">
+                            <form id="delete-form-{{ $row->nomor_kunjungan }}" action="{{ route('admin.kunjungan.destroy', $row->nomor_kunjungan) }}" method="POST">
                                 @csrf @method('DELETE')
                                 <button type="button" 
-                                        onclick="confirmDelete('{{ $row->id }}', '{{ $row->pengunjung->nama_lengkap }}')"
+                                        onclick="confirmDelete('{{ $row->nomor_kunjungan }}', '{{ $row->nama_lengkap }}')"
                                         class="w-8 h-8 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 hover:scale-110 transition flex items-center justify-center"
                                         title="Hapus">
                                     <i class="fas fa-trash text-xs"></i>
@@ -114,7 +113,7 @@
                             @endcan
                         </div>
 
-                        {{-- MODAL VIEW DETAIL (Hanya data yang ada) --}}
+                        {{-- MODAL VIEW DETAIL --}}
                         <div x-show="viewModalOpen" style="display: none;" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-left">
                             <div @click.away="viewModalOpen = false" class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
                                 <div class="bg-gray-50 p-4 border-b flex justify-between items-center">
@@ -128,11 +127,11 @@
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-bold text-gray-400 uppercase block">Nama Pengunjung</label>
-                                        <p class="text-sm font-bold text-gray-700">{{ $row->pengunjung->nama_lengkap }}</p>
+                                        <p class="text-sm font-bold text-gray-700">{{ $row->nama_lengkap }}</p>
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-bold text-gray-400 uppercase block">Asal Instansi / Prodi</label>
-                                        <p class="text-sm text-gray-600 font-medium">{{ $row->pengunjung->asal_instansi ?? 'Umum' }}</p>
+                                        <p class="text-sm text-gray-600 font-medium">{{ $row->asal_instansi ?? 'Umum' }}</p>
                                     </div>
                                     <div>
                                         <label class="text-[10px] font-bold text-gray-400 uppercase block">Keperluan</label>
@@ -154,7 +153,7 @@
                                     <h3 class="font-bold text-gray-800">Edit Keperluan</h3>
                                     <button @click="editModalOpen = false" class="text-gray-400 hover:text-red-500 transition"><i class="fas fa-times"></i></button>
                                 </div>
-                                <form action="{{ route('admin.kunjungan.update', $row->id) }}" method="POST">
+                                <form action="{{ route('admin.kunjungan.update', $row->nomor_kunjungan) }}" method="POST">
                                     @csrf @method('PUT')
                                     <div class="p-6 space-y-4">
                                         <div>
@@ -173,17 +172,14 @@
                                 </form>
                             </div>
                         </div>
-                        {{-- END MODALS --}}
 
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="4" class="px-6 py-10 text-center">
-                        <div class="text-gray-400">
-                            <i class="fas fa-inbox text-2xl mb-2"></i>
-                            <p class="text-sm">Belum ada data kunjungan.</p>
-                        </div>
+                    <td colspan="4" class="px-6 py-10 text-center text-gray-400">
+                        <i class="fas fa-inbox text-2xl mb-2"></i>
+                        <p class="text-sm">Belum ada data kunjungan.</p>
                     </td>
                 </tr>
                 @endforelse
@@ -191,11 +187,10 @@
         </table>
     </div>
 
-    @if($kunjungan->hasPages())
-    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/30">
-        {{ $kunjungan->appends(request()->query())->links() }} 
+    {{-- Pagination (Manual Info karena Cloud) --}}
+    <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/30 text-xs text-gray-400">
+        Menampilkan total <strong>{{ count($kunjungan) }}</strong> data dari Google Sheets.
     </div>
-    @endif
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

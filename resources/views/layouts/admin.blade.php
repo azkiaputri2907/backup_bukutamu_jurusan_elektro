@@ -12,10 +12,6 @@
     
     {{-- CSS Libraries --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -37,7 +33,6 @@
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
             border: 1px solid #f1f5f9 !important;
         }
-        /* Memastikan dropdown bulan muncul di atas */
         .flatpickr-innerContainer {
             z-index: 999;
         }
@@ -67,8 +62,8 @@
                     @if(Auth::user()->foto)
                         {{-- Menampilkan Foto Asli (kajur.png atau avatar_admin.jpg) --}}
                         <img src="{{ asset(Auth::user()->foto) }}" 
-                            alt="Profile" 
-                            class="w-12 h-12 rounded-xl object-cover border-2 border-white/20 shadow-sm">
+                             alt="Profile" 
+                             class="w-12 h-12 rounded-xl object-cover border-2 border-white/20 shadow-sm">
                     @else
                         {{-- Fallback Inisial jika foto tidak ada --}}
                         <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center border border-white/10">
@@ -114,17 +109,18 @@
                     <i class="fas fa-file-export w-5 text-center"></i> <span>Laporan</span>
                 </a>
 
-                @can('admin-only')
-                <a href="{{ route('admin.users') }}" 
-                   class="flex items-center gap-3 py-3 px-4 rounded-xl {{ request()->routeIs('admin.users*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10 transition' }}">
-                    <i class="fas fa-user-cog w-5 text-center"></i> <span>Manajemen User</span>
-                </a>
-                                <a href="{{ route('admin.keperluan') }}" 
-                   class="flex items-center gap-3 py-3 px-4 rounded-xl {{ request()->routeIs('admin.keperluan*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10 transition' }}">
-                    <i class="fas fa-tags w-5 text-center"></i> <span>Keperluan</span>
-                </a>
-
-                @endcan
+                {{-- PERBAIKAN: Mengganti @can dengan Pengecekan Role agar sinkron --}}
+                @if(Auth::user()->role && Auth::user()->role->nama_role === 'Administrator')
+                    <a href="{{ route('admin.users') }}" 
+                       class="flex items-center gap-3 py-3 px-4 rounded-xl {{ request()->routeIs('admin.users*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10 transition' }}">
+                        <i class="fas fa-user-cog w-5 text-center"></i> <span>Manajemen User</span>
+                    </a>
+                    
+                    <a href="{{ route('admin.keperluan') }}" 
+                       class="flex items-center gap-3 py-3 px-4 rounded-xl {{ request()->routeIs('admin.keperluan*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10 transition' }}">
+                        <i class="fas fa-tags w-5 text-center"></i> <span>Keperluan</span>
+                    </a>
+                @endif
 
             </nav>
 

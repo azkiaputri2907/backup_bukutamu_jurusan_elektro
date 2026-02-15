@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Illuminate\Http\Request; // Tambahkan ini
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
@@ -27,18 +28,22 @@ class LoginController extends Controller
     protected function authenticated(Request $request, $user)
     {
         // Cek nama role dari relasi 'role' di model User
-        if ($user->role && $user->role->nama_role === 'Administrator') {
-            return redirect('/dashboard'); // Arahkan ke dashboard admin
-        } elseif ($user->role && $user->role->nama_role === 'Ketua Jurusan') {
-            return redirect('/dashboard'); // Arahkan ke dashboard yang sama (karena sidebar Anda sudah otomatis)
+        if ($user->role && in_array($user->role->nama_role, ['Administrator', 'Ketua Jurusan'])) {
+            // Gunakan intended() agar dikembalikan ke halaman yang dituju sebelum kena redirect login
+            return redirect()->intended(route('admin.dashboard')); 
         }
 
-        // Jika tidak ada role yang cocok, arahkan ke home atau dashboard default
-        return redirect('/dashboard');
+        // Jika tidak ada role yang cocok, kembalikan ke home public
+        Auth::logout(); // Optional: Paksa logout jika role tidak valid
+        return redirect()->route('guest.index')->with('error', 'Akses ditolak.');
     }
 
+    /**
+     * Logika setelah logout
+     */
     protected function loggedOut(\Illuminate\Http\Request $request)
-{
-    return redirect()->route('guest.landing');
-}
+    {
+        // PERBAIKAN: Diubah dari guest.landing menjadi guest.index sesuai dengan route web.php
+        return redirect()->route('guest.index');
+    }
 }

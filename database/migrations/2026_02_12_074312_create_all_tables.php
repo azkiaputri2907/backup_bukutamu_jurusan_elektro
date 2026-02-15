@@ -112,25 +112,20 @@ return new class extends Migration
     });
 
         // --- TRIGGER AUTO NUMBER (MySQL) ---
-        DB::unprepared('
-            CREATE TRIGGER tr_generate_no_kunjungan BEFORE INSERT ON kunjungan
-            FOR EACH ROW
-            BEGIN
-                DECLARE last_urutan INT;
-                DECLARE today_str VARCHAR(8);
-                DECLARE new_urutan VARCHAR(3);
-                
-                SET today_str = DATE_FORMAT(NEW.tanggal, "%Y%m%d");
-                
-                SELECT IFNULL(MAX(CAST(RIGHT(nomor_kunjungan, 3) AS UNSIGNED)), 0) 
-                INTO last_urutan 
-                FROM kunjungan 
-                WHERE DATE_FORMAT(tanggal, "%Y%m%d") = today_str;
-                
-                SET new_urutan = LPAD(last_urutan + 1, 3, "0");
-                SET NEW.nomor_kunjungan = CONCAT("C0-", today_str, "-", new_urutan);
-            END
-        ');
+        DB::unprepared("
+        CREATE TRIGGER tr_generate_no_kunjungan
+        AFTER INSERT ON kunjungan
+        FOR EACH ROW
+        WHEN NEW.nomor_kunjungan IS NULL OR NEW.nomor_kunjungan = ''
+        BEGIN
+            UPDATE kunjungan
+            SET nomor_kunjungan = 'C0-' || strftime('%Y%m%d', 'now') || '-' || 
+                (SELECT printf('%03d', COUNT(*) + 1) 
+                 FROM kunjungan 
+                 WHERE date(tanggal) = date('now'))
+            WHERE id = NEW.id;
+        END
+    ");
     }
 
     public function down(): void

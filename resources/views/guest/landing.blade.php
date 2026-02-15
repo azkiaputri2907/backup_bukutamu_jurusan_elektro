@@ -121,7 +121,7 @@
                         </div>
                         <div>
                             <p class="text-4xl sm:text-5xl font-bold mb-1">{{ $totalPengunjung }}</p>
-                            <p class="text-xs opacity-90 uppercase tracking-widest font-semibold">Database Tamu</p>
+                            <p class="text-xs opacity-90 uppercase tracking-widest font-semibold">Total Tamu</p>
                         </div>
                     </div>
                     <div class="bg-gradient-to-br from-blue-500 to-indigo-600 text-white p-8 rounded-[2rem] shadow-xl transform hover:scale-105 transition duration-300 flex-1">
