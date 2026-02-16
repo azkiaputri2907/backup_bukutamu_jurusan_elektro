@@ -90,22 +90,16 @@
                             </td>
 
                             {{-- PERBAIKAN 2: Gunakan $s->nama_tamu langsung (Flat Object) --}}
-<td class="px-6 py-4">
-    <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-[#a044ff] flex items-center justify-center text-white font-bold text-sm shadow-sm uppercase">
-            {{ substr($s->nama_tamu ?? 'A', 0, 1) }}
-        </div>
-        <div class="flex flex-col">
-            <span class="font-bold text-gray-700 text-sm tracking-tight">
-                {{ $s->nama_tamu ?? 'Anonim' }}
-            </span>
-            {{-- Tambahan baris prodi di bawah nama --}}
-            <span class="text-[10px] text-gray-400 font-medium uppercase tracking-tighter">
-                {{ $s->prodi }}
-            </span>
-        </div>
-    </div>
-</td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-purple-500 to-[#a044ff] flex items-center justify-center text-white font-bold text-sm shadow-sm uppercase">
+                                        {{ substr($s->nama_tamu ?? 'A', 0, 1) }}
+                                    </div>
+                                    <span class="font-bold text-gray-700 text-sm tracking-tight">
+                                        {{ $s->nama_tamu ?? 'Anonim' }}
+                                    </span>
+                                </div>
+                            </td>
 
                             {{-- PERBAIKAN 3: Akses P1-P5 langsung dari $s (bukan $s->detail) --}}
                             <td class="px-6 py-4">
