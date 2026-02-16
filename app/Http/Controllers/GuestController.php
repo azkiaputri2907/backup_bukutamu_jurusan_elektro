@@ -42,14 +42,16 @@ public function index() {
     // 2. FORM KUNJUNGAN
     // ==========================================
     public function formKunjungan() {
-        $keperluan_master = [
-            (object)['keterangan' => 'Legalisir Ijazah'],
-            (object)['keterangan' => 'Konsultasi Akademik'],
-            (object)['keterangan' => 'Pengajuan Judul TA'],
-            (object)['keterangan' => 'Tamu Dinas / Instansi Luar'],
-            (object)['keterangan' => 'Peminjaman Laboratorium'],
-            (object)['keterangan' => 'Urusan Administrasi Jurusan']
-        ];
+    // AMBIL DARI GOOGLE SHEETS
+        $keperluan_master = $this->fetchSheetsData('master_keperluan');
+
+        // Jika Sheets kosong/error, sediakan fallback (pilihan darurat)
+        if (empty($keperluan_master)) {
+            $keperluan_master = [
+                (object)['keterangan' => 'Urusan Umum'],
+                (object)['keterangan' => 'Lainnya'],
+            ];
+        }
 
         $master_prodi = [
             (object)['nama' => 'D3 Teknik Listrik', 'jenis' => 'Prodi'],
@@ -223,5 +225,37 @@ public function index() {
             Log::error('Survey Error: ' . $e->getMessage());
             return redirect()->route('guest.index')->with('error', 'Penilaian gagal dikirim ke server.');
         }
+    }
+
+        private function fetchSheetsData($sheetName = 'master_keperluan')
+    {
+        try {
+            $scriptUrl = env('GOOGLE_SCRIPT_URL');
+            // Memanggil action 'read' yang sudah kita buat di Apps Script sebelumnya
+            $response = Http::timeout(10)->get($scriptUrl, [
+                'action' => 'read',
+                'sheet'  => $sheetName
+            ]);
+
+            if ($response->successful()) {
+                $json = $response->json();
+                $rows = $json['data'] ?? [];
+                $result = [];
+
+                foreach ($rows as $index => $row) {
+                    // Lewati header (index 0) dan baris kosong
+                    if ($index === 0 || empty($row[0])) continue;
+
+                    $result[] = (object) [
+                        'id' => $row[0],
+                        'keterangan' => $row[1] ?? '-'
+                    ];
+                }
+                return $result;
+            }
+        } catch (\Exception $e) {
+            Log::error("Gagal fetch $sheetName: " . $e->getMessage());
+        }
+        return [];
     }
 }

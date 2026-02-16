@@ -46,9 +46,8 @@ Route::middleware(['auth', 'role:Administrator,Ketua Jurusan'])->group(function 
 
     // Data Survey
     Route::get('/admin/survey', [DashboardController::class, 'survey'])->name('admin.survey'); 
-    Route::put('/admin/survey/{id}', [DashboardController::class, 'updateSurvey'])->name('admin.survey.update');
-    Route::delete('/admin/survey/{id}', [DashboardController::class, 'destroySurvey'])->name('admin.survey.destroy');
-
+    Route::put('/admin/survey/update', [DashboardController::class, 'updateSurvey'])->name('admin.survey.update');
+    Route::delete('/admin/survey/delete', [DashboardController::class, 'destroySurvey'])->name('admin.survey.destroy');
     // Data Pengunjung
     Route::get('/admin/pengunjung', [DashboardController::class, 'pengunjung'])->name('admin.pengunjung');
     Route::put('/admin/pengunjung/{id}', [DashboardController::class, 'updatePengunjung'])->name('admin.pengunjung.update');
@@ -56,7 +55,7 @@ Route::middleware(['auth', 'role:Administrator,Ketua Jurusan'])->group(function 
 
     // Laporan
     Route::get('/admin/laporan', [DashboardController::class, 'laporan'])->name('admin.laporan');
-    Route::post('/admin/laporan/export', [DashboardController::class, 'exportLaporan'])->name('admin.laporan.export');
+    Route::post('/laporan/export', [DashboardController::class, 'exportLaporan'])->name('admin.laporan.export');    
     
     // --- KHUSUS ADMINISTRATOR (Ketua Jurusan tidak bisa akses ini) ---
     Route::middleware(['role:Administrator'])->group(function () {
@@ -66,8 +65,8 @@ Route::middleware(['auth', 'role:Administrator,Ketua Jurusan'])->group(function 
         Route::put('/admin/users/{id}', [DashboardController::class, 'updateUser'])->name('admin.users.update');
         Route::delete('/admin/users/{id}', [DashboardController::class, 'destroyUser'])->name('admin.users.destroy');
 
-        // Master Data Keperluan (Dipindah ke sini karena hanya Admin yang atur master)
-        Route::get('/admin/master/keperluan', [DashboardController::class, 'masterKeperluan'])->name('admin.keperluan');
+        // Master Keperluan
+        Route::get('/admin/master/keperluan', [DashboardController::class, 'masterKeperluan'])->name('admin.keperluan.index');
         Route::post('/admin/master/keperluan', [DashboardController::class, 'storeKeperluan'])->name('admin.keperluan.store');
         Route::put('/admin/master/keperluan/{id}', [DashboardController::class, 'updateKeperluan'])->name('admin.keperluan.update');
         Route::delete('/admin/master/keperluan/{id}', [DashboardController::class, 'destroyKeperluan'])->name('admin.keperluan.destroy');

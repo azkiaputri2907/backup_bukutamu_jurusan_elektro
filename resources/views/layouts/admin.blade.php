@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -116,7 +119,7 @@
                         <i class="fas fa-user-cog w-5 text-center"></i> <span>Manajemen User</span>
                     </a>
                     
-                    <a href="{{ route('admin.keperluan') }}" 
+                    <a href="{{ route('admin.keperluan.index') }}" 
                        class="flex items-center gap-3 py-3 px-4 rounded-xl {{ request()->routeIs('admin.keperluan*') ? 'bg-white text-[#a044ff] font-bold shadow-lg' : 'opacity-70 hover:opacity-100 hover:bg-white/10 transition' }}">
                         <i class="fas fa-tags w-5 text-center"></i> <span>Keperluan</span>
                     </a>

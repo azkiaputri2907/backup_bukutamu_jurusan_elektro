@@ -104,14 +104,5 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // 6. ISI MASTER KEPERLUAN
-        DB::table('master_keperluan')->insert([
-            ['keterangan' => 'Legalisir Ijazah'],
-            ['keterangan' => 'Konsultasi Akademik'],
-            ['keterangan' => 'Pengajuan Judul TA'],
-            ['keterangan' => 'Tamu Dinas / Instansi Luar'],
-            ['keterangan' => 'Peminjaman Laboratorium'],
-            ['keterangan' => 'Urusan Administrasi Jurusan'],
-        ]);
     }
 }

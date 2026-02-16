@@ -8,15 +8,15 @@
 {{-- Header Section --}}
 <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6" x-data="{ addUserModal: false }">
     <div>
-        <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Pengaturan Pengguna</h2>
-        <p class="text-sm text-gray-500 font-medium">Kelola akses dan akun administrator sistem.</p>
+        <h2 class="text-2xl font-extrabold text-gray-800 tracking-tight">Akun Pengguna</h2>
+        <p class="text-sm text-gray-500 font-medium">Akses untuk akun administrator sistem.</p>
     </div>
 
     <div>
-        <button @click="addUserModal = true" class="flex items-center gap-2 bg-gradient-to-r from-[#3366ff] to-[#a044ff] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:scale-105 transition-transform">
+        {{-- <button @click="addUserModal = true" class="flex items-center gap-2 bg-gradient-to-r from-[#3366ff] to-[#a044ff] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:scale-105 transition-transform">
             <i class="fas fa-plus-circle"></i>
             <span>Tambah User</span>
-        </button>
+        </button> --}}
 
         {{-- MODAL TAMBAH USER --}}
         <div x-show="addUserModal" style="display: none;" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -109,24 +109,32 @@
                             </button>
 
                             {{-- Button Edit --}}
-                            <button @click="editUserModal = true" class="w-9 h-9 rounded-xl bg-yellow-50 text-yellow-600 hover:bg-yellow-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Akun">
+                            {{-- <button @click="editUserModal = true" class="w-9 h-9 rounded-xl bg-yellow-50 text-yellow-600 hover:bg-yellow-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Edit Akun">
                                 <i class="fas fa-edit text-xs"></i>
-                            </button>
+                            </button> --}}
 
-                            {{-- Button Delete --}}
-                            @if(Auth::id() !== $user->id)
-                            <form id="delete-user-{{ $user->id }}" action="{{ route('admin.users.destroy', $user->id) }}" method="POST">
-                                @csrf @method('DELETE')
-                                <button type="button" onclick="confirmDeleteUser('{{ $user->id }}', '{{ $user->name }}')"
-                                        class="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Hapus Akun">
-                                    <i class="fas fa-trash text-xs"></i>
-                                </button>
-                            </form>
-                            @else
-                            <button class="w-9 h-9 rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed flex items-center justify-center" title="Akun Sedang Digunakan">
-                                <i class="fas fa-user-lock text-xs"></i>
-                            </button>
-                            @endif
+{{-- Button Delete --}}
+@php
+    $roleNama = $user->role->nama_role ?? '';
+    // Tombol dikunci jika: Ini adalah akun sendiri ATAU role-nya adalah Administrator ATAU role-nya adalah Ketua Jurusan
+    $isLocked = (Auth::id() === $user->id) || ($roleNama === 'Administrator') || ($roleNama === 'Ketua Jurusan');
+@endphp
+
+@if(!$isLocked)
+    <form id="delete-user-{{ $user->id }}" action="{{ route('admin.users.destroy', $user->id) }}" method="POST">
+        @csrf @method('DELETE')
+        <button type="button" onclick="confirmDeleteUser('{{ $user->id }}', '{{ $user->name }}')"
+                class="w-9 h-9 rounded-xl bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-all flex items-center justify-center shadow-sm" title="Hapus Akun">
+            <i class="fas fa-trash text-xs"></i>
+        </button>
+    </form>
+@else
+    {{-- Tampilan Terkunci (Sama seperti Admin di gambar) --}}
+    <button class="w-9 h-9 rounded-xl bg-gray-100 text-gray-400 cursor-not-allowed flex items-center justify-center" 
+            title="Akun ini diproteksi dan tidak dapat dihapus">
+        <i class="fas fa-user-lock text-xs"></i>
+    </button>
+@endif
                         </div>
 
                         {{-- MODAL DETAIL --}}
@@ -162,7 +170,7 @@
                         </div>
 
                         {{-- MODAL EDIT --}}
-                        <div x-show="editUserModal" style="display: none;" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-left">
+                        {{-- <div x-show="editUserModal" style="display: none;" class="fixed inset-0 z-[110] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 text-left">
                             <div @click.away="editUserModal = false" class="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden">
                                 <div class="bg-yellow-500 p-6 text-white flex justify-between items-center">
                                     <h3 class="font-bold italic">Edit Data Pengguna</h3>
@@ -198,7 +206,7 @@
                                     </div>
                                 </form>
                             </div>
-                        </div>
+                        </div> --}}
 
                     </td>
                 </tr>
