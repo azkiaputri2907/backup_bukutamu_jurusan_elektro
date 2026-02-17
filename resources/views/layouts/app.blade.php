@@ -11,8 +11,8 @@
     <title>Buku Tamu ELektro</title>
 
     {{-- TAMBAHKAN LOGO DISINI (Favicon) --}}
-    <link rel="shortcut icon" href="{{ asset('img/logo_poliban.png') }}" type="image/x-icon">
-    <link rel="icon" href="{{ asset('img/logo_poliban.png') }}" type="image/x-icon">
+    <link rel="shortcut icon" href="{{ asset('images/logo_poliban.png') }}" type="image/x-icon">
+    <link rel="icon" href="{{ asset('images/logo_poliban.png') }}" type="image/x-icon">
 
     {{-- CDN --}}
     <script src="https://cdn.tailwindcss.com"></script>
