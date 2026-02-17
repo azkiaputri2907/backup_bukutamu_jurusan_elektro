@@ -1,4 +1,4 @@
 <?php
 
-// 1. Arahkan ke file index.php asli di folder public
+// Mengarahkan ke index.php asli Laravel
 require __DIR__ . '/../public/index.php';
