@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "framework": "laravel",
   "builds": [
     {
       "src": "public/index.php",
@@ -10,7 +9,7 @@
   "routes": [
     {
       "src": "/build/(.*)",
-      "dest": "/public/build/$1"
+      "dest": "public/build/$1"
     },
     {
       "src": "/(.*)",
