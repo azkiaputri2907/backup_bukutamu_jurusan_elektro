@@ -68,33 +68,38 @@ public function index() {
 // ==========================================
     // PERBAIKAN: CEK DATA LANGSUNG KE GOOGLE SHEETS
     // ==========================================
-    public function check(Request $request)
-    {
-        try {
-            $scriptUrl = env('GOOGLE_SCRIPT_URL');
-            
-            // Kita kirim request ke Google Script untuk mencari data
-            // Pastikan di Apps Script kamu sudah ada action 'searchPengunjung'
-            $response = Http::timeout(10)->get($scriptUrl, [
+public function check(Request $request)
+{
+    try {
+        $scriptUrl = env('GOOGLE_SCRIPT_URL');
+        
+        // Tambahkan withOptions untuk mengikuti redirect dan tanpa verifikasi SSL jika perlu
+        $response = Http::timeout(15)
+            ->withOptions([
+                'allow_redirects' => true,
+                'verify' => false, 
+            ])
+            ->get($scriptUrl, [
                 'action' => 'searchPengunjung',
                 'no_id'  => $request->no_id
             ]);
 
-            if ($response->successful()) {
-                $result = $response->json();
-                if (isset($result['status']) && $result['status'] == 'success') {
-                    return response()->json([
-                        'status' => 'success',
-                        'data'   => $result['data'] // Mengembalikan {nama_lengkap, asal_instansi}
-                    ]);
-                }
+        if ($response->successful()) {
+            $result = $response->json();
+            if (isset($result['status']) && $result['status'] == 'success') {
+                return response()->json([
+                    'status' => 'success',
+                    'data'   => $result['data']
+                ]);
             }
-        } catch (\Exception $e) {
-            Log::error('Gagal cek data ke Sheets: ' . $e->getMessage());
         }
-
-        return response()->json(['status' => 'not_found', 'data' => null]);
+    } catch (\Exception $e) {
+        Log::error('Gagal cek data ke Sheets: ' . $e->getMessage());
+        return response()->json(['status' => 'error', 'message' => $e->getMessage()], 500);
     }
+
+    return response()->json(['status' => 'not_found', 'data' => null]);
+}
 
     public function storeKunjungan(Request $request) {
         $request->validate([
