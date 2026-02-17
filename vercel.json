@@ -1,16 +1,17 @@
 {
   "version": 2,
+  "framework": "laravel",
   "builds": [
-    {
-      "src": "composer.json",
-      "use": "@vercel/php"
-    },
     {
       "src": "public/index.php",
       "use": "@vercel/php"
     }
   ],
   "routes": [
+    {
+      "src": "/build/(.*)",
+      "dest": "/public/build/$1"
+    },
     {
       "src": "/(.*)",
       "dest": "public/index.php"
